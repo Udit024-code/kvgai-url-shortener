@@ -35,11 +35,8 @@ document.getElementById('shorten-form').addEventListener('submit', async (e) => 
 // 2. Logic to fetch and display the Analytics Table
 async function fetchAnalytics() {
     try {
-        // We use cache: 'no-store' so the browser ALWAYS asks the backend for fresh data
         const response = await fetch(`${API_BASE_URL}/analytics`, { cache: 'no-store' });
         const data = await response.json();
-        
-        console.log("Analytics data loaded:", data); // This will print in the console
 
         const tbody = document.querySelector('#analytics-table tbody');
         tbody.innerHTML = ''; 
@@ -47,11 +44,18 @@ async function fetchAnalytics() {
         data.forEach(link => {
             const row = document.createElement('tr');
             
-            const displayUrl = link.original_url.length > 40 ? link.original_url.substring(0, 40) + '...' : link.original_url;
+            const displayUrl = link.original_url.length > 30 ? link.original_url.substring(0, 30) + '...' : link.original_url;
+
+            // Determine which CSS badge class to apply based on what the AI said
+            let badgeClass = "badge-safe";
+            if (link.safety_status === "Suspicious") badgeClass = "badge-suspicious";
+            if (link.safety_status === "Dangerous") badgeClass = "badge-dangerous";
 
             row.innerHTML = `
                 <td><a href="${link.original_url}" target="_blank">${displayUrl}</a></td>
                 <td><a href="${API_BASE_URL}/${link.short_code}" target="_blank">${link.short_code}</a></td>
+                <td><span class="badge ${badgeClass}">${link.safety_status}</span></td>
+                <td style="font-size: 14px; color: #555;"><em>${link.safety_reason}</em></td>
                 <td><strong>${link.clicks}</strong></td>
             `;
             tbody.appendChild(row);

@@ -8,3 +8,7 @@ class URLItem(Base):
     original_url = Column(String, nullable=False)
     short_code = Column(String, unique=True, index=True, nullable=False)
     clicks = Column(Integer, default=0)
+    
+    # NEW AI SECURITY COLUMNS
+    safety_status = Column(String, default="Safe")  # Safe, Suspicious, Dangerous
+    safety_reason = Column(String, default="No threats detected")
