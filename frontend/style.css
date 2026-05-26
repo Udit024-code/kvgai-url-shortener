@@ -1,170 +1,124 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f7f6;
-    color: #333;
+    background-color: #f4f6f9;
     margin: 0;
     padding: 40px 20px;
+    color: #333;
 }
-
 .container {
-    max-width: 950px;
+    max-width: 1000px;
     margin: 0 auto;
-}
-
-h1, h2 {
-    text-align: center;
-    color: #2c3e50;
-    margin-bottom: 10px;
-}
-
-.subtitle {
-    color: #7f8c8d;
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-size: 15px;
-}
-
-.card {
-    background: white;
+    background: #ffffff;
     padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.06);
-    margin-bottom: 40px;
-    text-align: center;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
-
-form {
+h1 {
+    color: #1e293b;
+    margin-top: 0;
+    font-size: 28px;
+}
+.subtitle {
+    color: #64748b;
+    margin-bottom: 30px;
+}
+.form-group {
     display: flex;
     gap: 10px;
-    justify-content: center;
+    margin-bottom: 40px;
 }
-
-input[type="url"] {
+input[type="text"] {
     flex: 1;
-    max-width: 70%;
-    padding: 12px 15px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
+    padding: 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
     font-size: 16px;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border 0.2s;
 }
-
-input[type="url"]:focus {
-    border-color: #3498db;
+input[type="text"]:focus {
+    border-color: #3b82f6;
 }
-
 button {
-    padding: 12px 24px;
-    background-color: #3498db;
-    color: white;
+    padding: 14px 24px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: opacity 0.2s;
 }
-
 button:hover {
-    background-color: #2980b9;
+    opacity: 0.9;
 }
-
-.controls {
+#shortenBtn {
+    background-color: #3b82f6;
+    color: white;
+}
+.dashboard-header {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 15px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 10px;
 }
-
-#refresh-analytics {
-    background-color: #2ecc71;
+.action-buttons {
+    display: flex;
+    gap: 10px;
 }
-
-#refresh-analytics:hover {
-    background-color: #27ae60;
+#refreshBtn {
+    background-color: #10b981;
+    color: white;
+    padding: 8px 16px;
+    font-size: 14px;
 }
-
-.hidden {
-    display: none;
+#clearBtn {
+    background-color: #ef4444;
+    color: white;
+    padding: 8px 16px;
+    font-size: 14px;
 }
-
-#result {
-    margin-top: 25px;
-    padding: 15px;
-    background-color: #e8f8f5;
-    border: 1px solid #1abc9c;
-    border-radius: 4px;
-}
-
-#result p {
-    margin: 0 0 8px 0;
-    font-weight: 600;
-    color: #16a085;
-}
-
-#short-link {
-    font-size: 18px;
-    font-weight: bold;
-    color: #1abc9c;
-    text-decoration: none;
-}
-
-#short-link:hover {
-    text-decoration: underline;
-}
-
-/* Table Design */
 table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.06);
+    margin-top: 10px;
 }
-
 th, td {
-    padding: 15px;
+    padding: 14px;
     text-align: left;
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 15px;
 }
-
 th {
-    background-color: #34495e;
-    color: white;
+    background-color: #f8fafc;
+    color: #475569;
     font-weight: 600;
 }
-
-tr:last-child td {
-    border-bottom: none;
-}
-
-/* AI Safety Badges */
 .badge {
-    padding: 6px 12px;
+    display: inline-block;
+    padding: 4px 10px;
     border-radius: 20px;
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 700;
     text-transform: uppercase;
-    display: inline-block;
-    text-align: center;
-    min-width: 80px;
 }
-
-.badge-safe {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+.badge.safe {
+    background-color: #d1fae5;
+    color: #065f46;
 }
-
-.badge-suspicious {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
+.badge.suspicious {
+    background-color: #ffedd5;
+    color: #9a3412;
 }
-
-.badge-dangerous {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+.badge.dangerous {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
 }

@@ -3,46 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Smart URL Shortener & Guardrail</title>
+    <title>SecurePath AI - Smart Link Management</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>AI-Powered URL Shortener 🔗</h1>
 
-        <div class="card">
-            <p class="subtitle">Enter any web address to generate a secure shortened link scanned by AI safety models.</p>
-            <form id="shorten-form">
-                <input type="url" id="long-url" placeholder="Paste your long link here (e.g., https://...)" required>
-                <button type="submit">Shorten & Scan</button>
-            </form>
-            
-            <div id="result" class="hidden">
-                <p>Your secure short link is ready:</p>
-                <a id="short-link" href="#" target="_blank"></a>
-            </div>
-        </div>
+<div class="container">
+    <h1>SecurePath AI Pipeline</h1>
+    <p class="subtitle">Next-Gen URL Infrastructure & Automated Cyber-Threat Mitigation Matrix</p>
 
-        <h2>AI-Powered Analytics Dashboard</h2>
-        <div class="controls">
-            <button id="refresh-analytics">Refresh Data</button>
-        </div>
-        
-        <table id="analytics-table">
-            <thead>
-                <tr>
-                    <th>Original URL</th>
-                    <th>Short Code</th>
-                    <th>AI Safety Status</th>
-                    <th>AI Threat Analysis</th>
-                    <th>Clicks</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
+    <div class="form-group">
+        <input type="text" id="urlInput" placeholder="Paste your destination link here (e.g., https://example.com)...">
+        <button id="shortenBtn">Shorten & Scan</button>
     </div>
 
-    <script src="app.js"></script>
+    <div class="dashboard-header">
+        <h2>Threat Mitigation Dashboard</h2>
+        <div class="action-buttons">
+            <button id="refreshBtn">Refresh Data</button>
+            <button id="clearBtn">Clear Dashboard</button>  
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Original Destination Link</th>
+                <th>Secure Short URL</th>
+                <th>Clicks</th>
+                <th>Safety Status</th>
+                <th>AI Threat Analysis Summary</th>
+            </tr>
+        </thead>
+        <tbody id="analyticsTableBody">
+            </tbody>
+    </table>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>

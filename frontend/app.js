@@ -1,72 +1,83 @@
-// We define our FastAPI backend address here
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE = "http://127.0.0.1:8000";
 
-// 1. Logic to handle the form submission
-document.getElementById('shorten-form').addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-    const longUrl = document.getElementById('long-url').value;
+// Action: Intercept Form Submissions
+document.getElementById('shortenBtn').addEventListener('click', async () => {
+    const urlValue = document.getElementById('urlInput').value.trim();
+    if(!urlValue) {
+        alert("Please provide a valid URL string.");
+        return;
+    }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/shorten`, {
+        const response = await fetch(`${API_BASE}/shorten`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ original_url: longUrl })
+            body: JSON.stringify({ original_url: urlValue })
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            
-            const resultDiv = document.getElementById('result');
-            const shortLinkA = document.getElementById('short-link');
-            
-            shortLinkA.href = data.short_url;
-            shortLinkA.textContent = data.short_url;
-            resultDiv.classList.remove('hidden');
-
-            fetchAnalytics(); // Refresh table after creating a link
+        if(response.ok) {
+            document.getElementById('urlInput').value = '';
+            fetchAnalytics(); // Instantly reload table with the new link
         } else {
-            alert("Oops! Something went wrong shortening the URL.");
+            alert("Error connecting with backend shortening services.");
         }
-    } catch (error) {
-        console.error("Error communicating with backend:", error);
+    } catch (err) {
+        console.error("Transmission interruption:", err);
     }
 });
 
-// 2. Logic to fetch and display the Analytics Table
+// Action: Fetch Data Rows and Display Badges Dynamically
 async function fetchAnalytics() {
     try {
-        const response = await fetch(`${API_BASE_URL}/analytics`, { cache: 'no-store' });
+        const response = await fetch(`${API_BASE}/analytics`);
+        if(!response.ok) return;
+
         const data = await response.json();
+        const tbody = document.getElementById('analyticsTableBody');
+        tbody.innerHTML = ''; // Clear previous fields
 
-        const tbody = document.querySelector('#analytics-table tbody');
-        tbody.innerHTML = ''; 
-
-        data.forEach(link => {
-            const row = document.createElement('tr');
+        // Reverse iterate so newest short links appear right at the top
+        data.reverse().forEach(item => {
+            const tr = document.createElement('tr');
             
-            const displayUrl = link.original_url.length > 30 ? link.original_url.substring(0, 30) + '...' : link.original_url;
+            // Set appropriate badge styling context
+            let badgeClass = 'safe';
+            if(item.safety_status.toLowerCase() === 'suspicious') badgeClass = 'suspicious';
+            if(item.safety_status.toLowerCase() === 'dangerous') badgeClass = 'dangerous';
 
-            // Determine which CSS badge class to apply based on what the AI said
-            let badgeClass = "badge-safe";
-            if (link.safety_status === "Suspicious") badgeClass = "badge-suspicious";
-            if (link.safety_status === "Dangerous") badgeClass = "badge-dangerous";
-
-            row.innerHTML = `
-                <td><a href="${link.original_url}" target="_blank">${displayUrl}</a></td>
-                <td><a href="${API_BASE_URL}/${link.short_code}" target="_blank">${link.short_code}</a></td>
-                <td><span class="badge ${badgeClass}">${link.safety_status}</span></td>
-                <td style="font-size: 14px; color: #555;"><em>${link.safety_reason}</em></td>
-                <td><strong>${link.clicks}</strong></td>
+            // THE FIX: Using ${API_BASE}/${item.short_code} instead of the undefined short_url
+            tr.innerHTML = `
+                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <a href="${item.original_url}" target="_blank">${item.original_url}</a>
+                </td>
+                <td><a href="${API_BASE}/${item.short_code}" target="_blank">${API_BASE}/${item.short_code}</a></td>
+                <td><strong>${item.clicks}</strong></td>
+                <td><span class="badge ${badgeClass}">${item.safety_status}</span></td>
+                <td style="color: #475569; font-size: 14px;">${item.safety_reason}</td>
             `;
-            tbody.appendChild(row);
+            tbody.appendChild(tr);
         });
-    } catch (error) {
-        console.error("Error fetching analytics:", error);
+    } catch (err) {
+        console.error("Dashboard synchronization error:", err);
     }
 }
 
-// 3. Attach the refresh button (THIS is what makes the button alive!)
-document.getElementById('refresh-analytics').addEventListener('click', fetchAnalytics);
+// Action: Wipes out data rows via API call
+document.getElementById('clearBtn').addEventListener('click', async () => {
+    if (confirm("Are you sure you want to permanently clear all dashboard analytics data?")) {
+        try {
+            const response = await fetch(`${API_BASE}/clear-all`, { method: 'DELETE' });
+            if (response.ok) {
+                fetchAnalytics(); // Instantly update frontend table to empty state
+            } else {
+                alert("Failed to clear database logs.");
+            }
+        } catch (err) {
+            console.error("Wipe command transmission error:", err);
+        }
+    }
+});
 
-// 4. Automatically load the table data when you open the page
-fetchAnalytics();
+// Event Loop Links
+document.getElementById('refreshBtn').addEventListener('click', fetchAnalytics);
+window.addEventListener('DOMContentLoaded', fetchAnalytics);

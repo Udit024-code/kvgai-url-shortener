@@ -6,14 +6,18 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-import google.generativeai as genai
+
+# Import the modern official Google GenAI library
+from google import genai
 
 import database
 import models
 
-# Configure Gemini API (It will look for an environment variable or fallback to a string)
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "PASTE_YOUR_GEMINI_KEY_HERE")
-genai.configure(api_key=GEMINI_API_KEY)
+# Set up the API key credentials
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBsDZuh30-t2cnM5zEl0cG6diKvRcpjSmU")
+
+# Initialize the modern production client
+ai_client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = FastAPI()
 
@@ -38,10 +42,9 @@ def generate_short_code(db: Session, length: int = 6) -> str:
         if not db_exists:
             return code
 
-# NEW HELPER: Call Gemini to scan the link for safety issues
+# Security-Hardened AI Safety Scanner Function
 def scan_url_safety(url: str) -> tuple:
-    # If no real API key is set yet, run a smart mock scanner so it doesn't crash
-    if GEMINI_API_KEY == "PASTE_YOUR_GEMINI_KEY_HERE" or not GEMINI_API_KEY:
+    if not GEMINI_API_KEY or GEMINI_API_KEY == "PASTE_YOUR_GEMINI_KEY_HERE":
         if "test" in url or "sketchy" in url:
             return "Suspicious", "URL contains highly unusual domain keywords."
         if "hack" in url or "free-money" in url:
@@ -49,16 +52,22 @@ def scan_url_safety(url: str) -> tuple:
         return "Safe", "Domain cleared by default structural heuristics."
 
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
         prompt = (
             f"Analyze this URL for phishing, scam, malware, or suspicious parameters: {url}. "
             "Determine its risk status. Respond in exactly this format and absolutely nothing else:\n"
             "STATUS: <Safe, Suspicious, or Dangerous> | REASON: <one brief sentence explaining why>"
         )
-        response = model.generate_content(prompt)
+        
+        response = ai_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        
+        if not response.text:
+            return "Dangerous", "Blocked by Google Safety Filters: High probability of phishing/fraud mimicry."
+
         text_result = response.text.strip()
 
-        # Parse the custom format split by "|"
         if "STATUS:" in text_result and "|" in text_result:
             parts = text_result.split("|")
             status = parts[0].replace("STATUS:", "").strip()
@@ -66,13 +75,23 @@ def scan_url_safety(url: str) -> tuple:
             return status, reason
         
         return "Safe", "Analyzed successfully."
+        
     except Exception as e:
-        print(f"AI Scanning Error: {e}")
-        return "Safe", "AI Scanner timed out; defaulted to secure fallback."
+        print(f"\n⚠️ AI Scanner Exception Caught: {e}\n")
+        
+        lower_url = url.lower()
+        if "paypal" in lower_url or "signin" in lower_url or "secure" in lower_url or "update" in lower_url:
+            return "Dangerous", "Heuristic Match: High-risk brand-mimicking domain detected."
+        if "test" in lower_url or "sketchy" in lower_url:
+            return "Suspicious", "Heuristic analysis flagged unusual keywords."
+        if "hack" in lower_url or "free-money" in lower_url:
+            return "Dangerous", "Heuristic analysis flagged a phishing hazard."
+            
+        return "Safe", "Structural heuristic analysis cleared the URL."
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the AI-Powered Smart Shortener!"}
+    return {"message": "Welcome to the SecurePath AI Pipeline!"}
 
 @app.post("/shorten")
 def shorten_url(payload: URLCreate, db: Session = Depends(database.get_db)):
@@ -80,9 +99,7 @@ def shorten_url(payload: URLCreate, db: Session = Depends(database.get_db)):
     if not url_to_shorten:
         raise HTTPException(status_code=400, detail="URL cannot be empty")
     
-    # Run our brand new AI scan layer!
     status, reason = scan_url_safety(url_to_shorten)
-    
     short_code = generate_short_code(db)
     
     new_url_entry = models.URLItem(
@@ -107,6 +124,17 @@ def shorten_url(payload: URLCreate, db: Session = Depends(database.get_db)):
 @app.get("/analytics")
 def get_all_links(db: Session = Depends(database.get_db)):
     return db.query(models.URLItem).all()
+
+# --- THE WIPE DATABASE ROUTE ---
+@app.delete("/clear-all")
+def clear_all_links(db: Session = Depends(database.get_db)):
+    try:
+        db.query(models.URLItem).delete()
+        db.commit()
+        return {"message": "All analytics data cleared successfully!"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database clear failed: {str(e)}")
 
 @app.get("/{short_code}")
 def redirect_to_original(short_code: str, db: Session = Depends(database.get_db)):
