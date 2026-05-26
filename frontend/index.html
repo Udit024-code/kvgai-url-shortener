@@ -3,12 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL Shortener</title>
+    <title>URL Shortener & Analytics</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>URL Shortener & Click Analytics</h1>
-    <p>Frontend scaffolding is complete!</p>
+    <div class="container">
+        <h1>URL Shortener 🔗</h1>
+
+        <div class="card">
+            <form id="shorten-form">
+                <input type="url" id="long-url" placeholder="Paste your long link here (e.g., https://...)" required>
+                <button type="submit">Shorten</button>
+            </form>
+            
+            <div id="result" class="hidden">
+                <p>Your short link is ready:</p>
+                <a id="short-link" href="#" target="_blank"></a>
+            </div>
+        </div>
+
+        <h2>Analytics Dashboard</h2>
+        <button id="refresh-analytics">Refresh Data</button>
+        <table id="analytics-table">
+            <thead>
+                <tr>
+                    <th>Original URL</th>
+                    <th>Short Code</th>
+                    <th>Clicks</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
