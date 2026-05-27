@@ -7,16 +7,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+# Import the tool to read your hidden .env file
+from dotenv import load_dotenv
+
 # Import the modern official Google GenAI library
 from google import genai
 
 import database
 import models
 
-# Set up the API key credentials
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBsDZuh30-t2cnM5zEl0cG6diKvRcpjSmU")
+# Look inside your hidden .env file on your computer
+load_dotenv()
 
-# Initialize the modern production client
+# Pull the brand new API key securely out of the environment
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Initialize the modern production client using your hidden key
 ai_client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = FastAPI()
@@ -44,10 +50,14 @@ def generate_short_code(db: Session, length: int = 6) -> str:
 
 # Security-Hardened AI Safety Scanner Function
 def scan_url_safety(url: str) -> tuple:
-    if not GEMINI_API_KEY or GEMINI_API_KEY == "PASTE_YOUR_GEMINI_KEY_HERE":
-        if "test" in url or "sketchy" in url:
+    # Fallback heuristics check if the environment key is completely missing
+    if not GEMINI_API_KEY:
+        lower_url = url.lower()
+        if "paypal" in lower_url or "signin" in lower_url or "secure" in lower_url or "update" in lower_url:
+            return "Dangerous", "Heuristic Match: High-risk brand-mimicking domain detected."
+        if "test" in lower_url or "sketchy" in lower_url:
             return "Suspicious", "URL contains highly unusual domain keywords."
-        if "hack" in url or "free-money" in url:
+        if "hack" in lower_url or "free-money" in lower_url:
             return "Dangerous", "High probability of phishing or credential harvesting."
         return "Safe", "Domain cleared by default structural heuristics."
 
@@ -125,7 +135,6 @@ def shorten_url(payload: URLCreate, db: Session = Depends(database.get_db)):
 def get_all_links(db: Session = Depends(database.get_db)):
     return db.query(models.URLItem).all()
 
-# --- THE WIPE DATABASE ROUTE ---
 @app.delete("/clear-all")
 def clear_all_links(db: Session = Depends(database.get_db)):
     try:
