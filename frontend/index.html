@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecurePath AI - Smart Link Management</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -12,16 +13,19 @@
     <h1>SecurePath AI Pipeline</h1>
     <p class="subtitle">Next-Gen URL Infrastructure & Automated Cyber-Threat Mitigation Matrix</p>
 
-    <div class="form-group">
-        <input type="text" id="urlInput" placeholder="Paste your destination link here (e.g., https://example.com)...">
-        <button id="shortenBtn">Shorten & Scan</button>
+    <div class="form-group-container">
+        <div class="form-group">
+            <input type="text" id="urlInput" placeholder="Paste your destination link here (e.g., https://example.com)...">
+            <input type="text" id="aliasInput" placeholder="Custom Alias (Optional, e.g., my-portfolio)" style="max-width: 250px;">
+            <button id="shortenBtn">Shorten & Scan</button>
+        </div>
     </div>
 
     <div class="dashboard-header">
         <h2>Threat Mitigation Dashboard</h2>
         <div class="action-buttons">
             <button id="refreshBtn">Refresh Data</button>
-            <button id="clearBtn">Clear Dashboard</button>  
+            <button id="clearBtn">Clear Dashboard</button>
         </div>
     </div>
 
@@ -30,6 +34,7 @@
             <tr>
                 <th>Original Destination Link</th>
                 <th>Secure Short URL</th>
+                <th>QR Code</th>
                 <th>Clicks</th>
                 <th>Safety Status</th>
                 <th>AI Threat Analysis Summary</th>

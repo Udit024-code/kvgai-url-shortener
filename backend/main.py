@@ -19,11 +19,14 @@ import models
 # Look inside your hidden .env file on your computer
 load_dotenv()
 
-# Pull the brand new API key securely out of the environment
+# Pull the API key securely out of the environment
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Initialize the modern production client using your hidden key
-ai_client = genai.Client(api_key=GEMINI_API_KEY)
+if GEMINI_API_KEY:
+    ai_client = genai.Client(api_key=GEMINI_API_KEY)
+else:
+    ai_client = None
 
 app = FastAPI()
 
@@ -37,8 +40,10 @@ app.add_middleware(
 
 models.Base.metadata.create_all(bind=database.engine)
 
+# Added custom_alias to the expected payload
 class URLCreate(BaseModel):
     original_url: str
+    custom_alias: str = None 
 
 def generate_short_code(db: Session, length: int = 6) -> str:
     chars = string.ascii_letters + string.digits
@@ -50,8 +55,8 @@ def generate_short_code(db: Session, length: int = 6) -> str:
 
 # Security-Hardened AI Safety Scanner Function
 def scan_url_safety(url: str) -> tuple:
-    # Fallback heuristics check if the environment key is completely missing
-    if not GEMINI_API_KEY:
+    # Fallback heuristics check if the environment key is completely missing or client failed to init
+    if not ai_client:
         lower_url = url.lower()
         if "paypal" in lower_url or "signin" in lower_url or "secure" in lower_url or "update" in lower_url:
             return "Dangerous", "Heuristic Match: High-risk brand-mimicking domain detected."
@@ -109,8 +114,18 @@ def shorten_url(payload: URLCreate, db: Session = Depends(database.get_db)):
     if not url_to_shorten:
         raise HTTPException(status_code=400, detail="URL cannot be empty")
     
+    # Check if user passed a custom alias
+    if payload.custom_alias and payload.custom_alias.strip():
+        short_code = payload.custom_alias.strip()
+        # Verify if this custom alias is already taken in our database
+        db_exists = db.query(models.URLItem).filter(models.URLItem.short_code == short_code).first()
+        if db_exists:
+            raise HTTPException(status_code=400, detail="This custom alias is already taken!")
+    else:
+        # No alias passed, generate a random short code like normal
+        short_code = generate_short_code(db)
+        
     status, reason = scan_url_safety(url_to_shorten)
-    short_code = generate_short_code(db)
     
     new_url_entry = models.URLItem(
         original_url=url_to_shorten,
