@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://securepath-backend.onrender.com";
 
 // Action: Intercept Form Submissions
 document.getElementById('shortenBtn').addEventListener('click', async () => {
