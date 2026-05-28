@@ -29,7 +29,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         original_url: originalUrl,
-                        custom_alias: customAlias || null
+                        // 🎯 THE FIX: No more 'null'. It sends a pure string every time.
+                        custom_alias: customAlias 
                     })
                 });
 
