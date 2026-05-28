@@ -33,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     })
                 });
 
-                // 🎯 FORCE RAW TEXT: This guarantees [object Object] is physically impossible
                 if (!response.ok) {
                     const rawServerText = await response.text();
                     throw new Error(rawServerText);
@@ -48,8 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 alert("Success! Link shortened successfully.");
 
             } catch (error) {
-                // Displays the pure text string exactly as the server sent it
-                alert("SERVER MESSAGE:\n" + error.message);
+                alert("SERVER NOTIFICATION:\n" + error.message);
                 console.error(error);
             } finally {
                 shortenBtn.innerText = originalBtnText;
