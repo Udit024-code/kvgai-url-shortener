@@ -93,13 +93,6 @@ To verify the predictive capabilities, fallback heuristics, and UI dynamic rende
 
 ## 💻 Local Workspace Engineering Setup
 
-### Environment Declarations
-Create a hidden configuration layout file named `.env` inside your root `/backend` folder directory path:
-```env
-DATABASE_URL=postgresql://your_user:your_password@your_neon_host/dbname?sslmode=require
-GEMINI_API_KEY=AIzaSyYourProductionGoogleGeminiKeyHere
-```
-
 ### Installation Steps
 
 **1. Service Node Blueprint Preparation (Backend)**
