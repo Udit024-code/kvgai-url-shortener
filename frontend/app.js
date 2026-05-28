@@ -29,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         original_url: originalUrl,
-                        // 🎯 THE FIX: No more 'null'. It sends a pure string every time.
                         custom_alias: customAlias 
                     })
                 });
@@ -79,13 +78,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const row = document.createElement("tr");
             const safetyStatus = (link.safety_status || "Safe").toLowerCase();
             const badgeClass = safetyStatus === "safe" ? "badge-safe" : "badge-danger";
+            
+            // 🎯 THE FIX: Constructing the full URL using your exact 'short_code' variable
+            const clickableShortUrl = `${BACKEND_URL}/${link.short_code}`;
+
             row.innerHTML = `
                 <td class="truncate">${link.original_url}</td>
-                <td><a href="${link.secure_short_url || link.short_url}" target="_blank">${link.secure_short_url || link.short_url}</a></td>
-                <td><img src="${link.qr_code_url || `https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(link.secure_short_url || link.short_url)}`}" width="45" height="45"/></td>
+                <td><a href="${clickableShortUrl}" target="_blank">${clickableShortUrl}</a></td>
+                <td><img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(clickableShortUrl)}" width="45" height="45"/></td>
                 <td style="text-align:center;">${link.clicks || 0}</td>
                 <td><span class="status-badge ${badgeClass}">${link.safety_status || "Safe"}</span></td>
-                <td>${link.ai_threat_summary || "Clean"}</td>
+                <td>${link.safety_reason || "Clean"}</td>
             `;
             dashboardBody.appendChild(row);
         });
