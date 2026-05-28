@@ -5,9 +5,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlInput = document.getElementById("urlInput");
     const aliasInput = document.getElementById("aliasInput");
     const dashboardBody = document.getElementById("analyticsTableBody");
+    
+    // 🎯 Grab the new buttons from HTML
+    const refreshBtn = document.getElementById("refreshBtn");
+    const clearBtn = document.getElementById("clearBtn");
 
     fetchAnalyticsHistory();
 
+    // --- MAIN PIPELINE (Already Working Perfectly) ---
     if (shortenBtn) {
         shortenBtn.addEventListener("click", async (e) => {
             e.preventDefault();
@@ -55,6 +60,39 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // --- REFRESH BUTTON LOGIC ---
+    if (refreshBtn) {
+        refreshBtn.addEventListener("click", () => {
+            fetchAnalyticsHistory();
+            refreshBtn.innerText = "Refreshing...";
+            setTimeout(() => { refreshBtn.innerText = "Refresh Data"; }, 500);
+        });
+    }
+
+    // --- CLEAR DASHBOARD LOGIC ---
+    if (clearBtn) {
+        clearBtn.addEventListener("click", async () => {
+            const confirmDelete = confirm("Are you sure you want to clear all analytics data? This cannot be undone.");
+            if (confirmDelete) {
+                try {
+                    const response = await fetch(`${BACKEND_URL}/clear-all`, {
+                        method: "DELETE"
+                    });
+                    
+                    if (response.ok) {
+                        fetchAnalyticsHistory(); // This will render the empty state
+                        alert("Dashboard completely cleared.");
+                    } else {
+                        alert("Failed to clear dashboard.");
+                    }
+                } catch (error) {
+                    console.error("Error clearing dashboard:", error);
+                }
+            }
+        });
+    }
+
+    // --- FETCH & RENDER TABLES ---
     async function fetchAnalyticsHistory() {
         if (!dashboardBody) return;
         try {
@@ -79,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const safetyStatus = (link.safety_status || "Safe").toLowerCase();
             const badgeClass = safetyStatus === "safe" ? "badge-safe" : "badge-danger";
             
-            // 🎯 THE FIX: Constructing the full URL using your exact 'short_code' variable
             const clickableShortUrl = `${BACKEND_URL}/${link.short_code}`;
 
             row.innerHTML = `
