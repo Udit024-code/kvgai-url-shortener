@@ -83,38 +83,45 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
+    table-layout: fixed; /* Ensures column truncation works cleanly */
 }
 th, td {
     padding: 14px;
     text-align: left;
     border-bottom: 1px solid #e2e8f0;
     font-size: 15px;
+    word-wrap: break-word;
 }
 th {
     background-color: #f8fafc;
     color: #475569;
     font-weight: 600;
 }
-.badge {
+
+/* 🎯 FIXED: AI SAFETY STATUS BADGES MATCHING APP.JS */
+.status-badge {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
+    text-align: center;
+    min-width: 90px;
 }
-.badge.safe {
+.badge-safe {
     background-color: #d1fae5;
     color: #065f46;
 }
-.badge.suspicious {
+.badge-warning {
     background-color: #ffedd5;
     color: #9a3412;
 }
-.badge.dangerous {
+.badge-danger {
     background-color: #fee2e2;
     color: #991b1b;
 }
+
 a {
     color: #3b82f6;
     text-decoration: none;
@@ -136,4 +143,12 @@ a:hover {
     padding: 2px;
     background: white;
     border-radius: 4px;
+}
+
+/* 🎯 ADDED: Prevent long destination links from breaking table layouts */
+.truncate {
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

@@ -114,8 +114,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         linksArray.forEach(link => {
             const row = document.createElement("tr");
-            const safetyStatus = (link.safety_status || "Safe").toLowerCase();
-            const badgeClass = safetyStatus === "safe" ? "badge-safe" : "badge-danger";
+            
+            // 🎯 THE FIX: Handle all 3 colors perfectly
+            const statusStr = (link.safety_status || "Safe").toLowerCase();
+            let badgeClass = "badge-safe"; // Default green
+            if (statusStr === "suspicious") badgeClass = "badge-warning"; // Yellow
+            if (statusStr === "dangerous") badgeClass = "badge-danger"; // Red
             
             const clickableShortUrl = `${BACKEND_URL}/${link.short_code}`;
 
