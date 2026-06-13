@@ -1,9 +1,22 @@
 const BACKEND_URL = "https://securepath-backend.onrender.com";
 
-// Keep-alive ping: hits the backend every 14 minutes to prevent Render cold starts
+// Keep-alive ping every 14 minutes to prevent Render cold starts
 setInterval(() => {
-    fetch(`${BACKEND_URL}/`).catch(() => {}); // silent ping, ignore errors
+    fetch(`${BACKEND_URL}/`).catch(() => {});
 }, 14 * 60 * 1000);
+
+// Fetch with auto-retry: on network failure, waits delayMs then tries once more.
+// This handles Render cold starts — the first request wakes the server,
+// the retry (after 8s) hits it once it's up.
+async function fetchWithRetry(url, options = {}, delayMs = 8000) {
+    try {
+        return await fetch(url, options);
+    } catch (firstErr) {
+        console.warn("Backend unreachable, may be waking up. Retrying in", delayMs / 1000, "seconds...");
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        return await fetch(url, options); // throws naturally if it fails again
+    }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     const shortenBtn = document.getElementById("shortenBtn");
@@ -13,8 +26,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const refreshBtn = document.getElementById("refreshBtn");
     const clearBtn = document.getElementById("clearBtn");
 
-    // Guard flag: prevents concurrent/duplicate fetchAnalyticsHistory calls
     let isFetching = false;
+
+    // Silently wake the backend the moment the page loads
+    fetch(`${BACKEND_URL}/`).catch(() => {});
 
     fetchAnalyticsHistory();
 
@@ -36,14 +51,19 @@ document.addEventListener("DOMContentLoaded", () => {
             shortenBtn.innerText = "Scanning AI...";
 
             try {
-                const response = await fetch(`${BACKEND_URL}/shorten`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        original_url: originalUrl,
-                        custom_alias: customAlias
-                    })
-                });
+                const response = await fetchWithRetry(
+                    `${BACKEND_URL}/shorten`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            original_url: originalUrl,
+                            custom_alias: customAlias
+                        })
+                    }
+                    // On cold start: first fetch fails → waits 8s → retries automatically
+                    // Button stays disabled during this so user knows it's working
+                );
 
                 if (!response.ok) {
                     const rawServerText = await response.text();
@@ -53,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 urlInput.value = "";
                 if (aliasInput) aliasInput.value = "";
 
-                // Wait for the dashboard to fully update before showing success
                 await fetchAnalyticsHistory();
                 alert("Success! Link shortened successfully.");
 
@@ -82,10 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const confirmDelete = confirm("Are you sure you want to clear all analytics data? This cannot be undone.");
             if (confirmDelete) {
                 try {
-                    const response = await fetch(`${BACKEND_URL}/clear-all`, {
-                        method: "DELETE"
-                    });
-
+                    const response = await fetch(`${BACKEND_URL}/clear-all`, { method: "DELETE" });
                     if (response.ok) {
                         await fetchAnalyticsHistory();
                         alert("Dashboard completely cleared.");
@@ -100,10 +116,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- FETCH & RENDER TABLE ---
-    // Returns a Promise so callers can await it (prevents race conditions)
     async function fetchAnalyticsHistory() {
         if (!dashboardBody) return;
-        if (isFetching) return; // Block concurrent calls — this is the duplicate-entry fix
+        if (isFetching) return;
         isFetching = true;
         try {
             const response = await fetch(`${BACKEND_URL}/analytics`);
