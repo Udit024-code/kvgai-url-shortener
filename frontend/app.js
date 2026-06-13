@@ -1,22 +1,28 @@
 const BACKEND_URL = "https://securepath-backend.onrender.com";
 
+// Keep-alive ping: hits the backend every 14 minutes to prevent Render cold starts
+setInterval(() => {
+    fetch(`${BACKEND_URL}/`).catch(() => {}); // silent ping, ignore errors
+}, 14 * 60 * 1000);
+
 document.addEventListener("DOMContentLoaded", () => {
     const shortenBtn = document.getElementById("shortenBtn");
     const urlInput = document.getElementById("urlInput");
     const aliasInput = document.getElementById("aliasInput");
     const dashboardBody = document.getElementById("analyticsTableBody");
-    
-    // 🎯 Grab the new buttons from HTML
     const refreshBtn = document.getElementById("refreshBtn");
     const clearBtn = document.getElementById("clearBtn");
 
+    // Guard flag: prevents concurrent/duplicate fetchAnalyticsHistory calls
+    let isFetching = false;
+
     fetchAnalyticsHistory();
 
-    // --- MAIN PIPELINE (Already Working Perfectly) ---
+    // --- MAIN PIPELINE ---
     if (shortenBtn) {
         shortenBtn.addEventListener("click", async (e) => {
             e.preventDefault();
-            
+
             const originalUrl = urlInput.value.trim();
             const customAlias = aliasInput ? aliasInput.value.trim() : "";
 
@@ -25,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            shortenBtn.disabled = true;
             const originalBtnText = shortenBtn.innerText;
             shortenBtn.innerText = "Scanning AI...";
 
@@ -34,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         original_url: originalUrl,
-                        custom_alias: customAlias 
+                        custom_alias: customAlias
                     })
                 });
 
@@ -43,12 +50,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     throw new Error(rawServerText);
                 }
 
-                const data = await response.json();
-                
                 urlInput.value = "";
                 if (aliasInput) aliasInput.value = "";
-                
-                fetchAnalyticsHistory();
+
+                // Wait for the dashboard to fully update before showing success
+                await fetchAnalyticsHistory();
                 alert("Success! Link shortened successfully.");
 
             } catch (error) {
@@ -56,20 +62,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error(error);
             } finally {
                 shortenBtn.innerText = originalBtnText;
+                shortenBtn.disabled = false;
             }
         });
     }
 
-    // --- REFRESH BUTTON LOGIC ---
+    // --- REFRESH BUTTON ---
     if (refreshBtn) {
-        refreshBtn.addEventListener("click", () => {
-            fetchAnalyticsHistory();
+        refreshBtn.addEventListener("click", async () => {
             refreshBtn.innerText = "Refreshing...";
-            setTimeout(() => { refreshBtn.innerText = "Refresh Data"; }, 500);
+            await fetchAnalyticsHistory();
+            refreshBtn.innerText = "Refresh Data";
         });
     }
 
-    // --- CLEAR DASHBOARD LOGIC ---
+    // --- CLEAR DASHBOARD ---
     if (clearBtn) {
         clearBtn.addEventListener("click", async () => {
             const confirmDelete = confirm("Are you sure you want to clear all analytics data? This cannot be undone.");
@@ -78,9 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     const response = await fetch(`${BACKEND_URL}/clear-all`, {
                         method: "DELETE"
                     });
-                    
+
                     if (response.ok) {
-                        fetchAnalyticsHistory(); // This will render the empty state
+                        await fetchAnalyticsHistory();
                         alert("Dashboard completely cleared.");
                     } else {
                         alert("Failed to clear dashboard.");
@@ -92,9 +99,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- FETCH & RENDER TABLES ---
+    // --- FETCH & RENDER TABLE ---
+    // Returns a Promise so callers can await it (prevents race conditions)
     async function fetchAnalyticsHistory() {
         if (!dashboardBody) return;
+        if (isFetching) return; // Block concurrent calls — this is the duplicate-entry fix
+        isFetching = true;
         try {
             const response = await fetch(`${BACKEND_URL}/analytics`);
             if (response.ok) {
@@ -103,6 +113,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            isFetching = false;
         }
     }
 
@@ -114,13 +126,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         linksArray.forEach(link => {
             const row = document.createElement("tr");
-            
-            // 🎯 THE FIX: Handle all 3 colors perfectly
+
             const statusStr = (link.safety_status || "Safe").toLowerCase();
-            let badgeClass = "badge-safe"; // Default green
-            if (statusStr === "suspicious") badgeClass = "badge-warning"; // Yellow
-            if (statusStr === "dangerous") badgeClass = "badge-danger"; // Red
-            
+            let badgeClass = "badge-safe";
+            if (statusStr === "suspicious") badgeClass = "badge-warning";
+            if (statusStr === "dangerous") badgeClass = "badge-danger";
+
             const clickableShortUrl = `${BACKEND_URL}/${link.short_code}`;
 
             row.innerHTML = `
