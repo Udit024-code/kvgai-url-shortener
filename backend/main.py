@@ -22,6 +22,12 @@ load_dotenv()
 # Pull the API key securely out of the environment
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+# Pull the public-facing base URL out of the environment.
+# Locally this falls back to 127.0.0.1:8000. On Render, set PUBLIC_BASE_URL
+# to your onrender.com URL (or your custom domain once you add one) so the
+# API never hands back a broken localhost link.
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+
 # Initialize the modern production client using your hidden key
 if GEMINI_API_KEY:
     ai_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -108,6 +114,14 @@ def scan_url_safety(url: str) -> tuple:
 def read_root():
     return {"message": "Welcome to the SecurePath AI Pipeline!"}
 
+@app.get("/health")
+def health_check():
+    # Deliberately does NOT touch the database or Gemini API.
+    # This is the endpoint your uptime monitor (UptimeRobot, cron-job.org, etc.)
+    # should ping every 5-10 minutes to prevent the free Render instance from
+    # spinning down after 15 minutes of inactivity.
+    return {"status": "alive"}
+
 @app.post("/shorten")
 def shorten_url(payload: URLCreate, db: Session = Depends(database.get_db)):
     url_to_shorten = payload.original_url.strip()
@@ -141,7 +155,7 @@ def shorten_url(payload: URLCreate, db: Session = Depends(database.get_db)):
     return {
         "original_url": new_url_entry.original_url,
         "short_code": new_url_entry.short_code,
-        "short_url": f"http://127.0.0.1:8000/{new_url_entry.short_code}",
+        "short_url": f"{PUBLIC_BASE_URL}/{new_url_entry.short_code}",
         "safety_status": new_url_entry.safety_status,
         "safety_reason": new_url_entry.safety_reason
     }

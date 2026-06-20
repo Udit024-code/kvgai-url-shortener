@@ -5,45 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecurePath AI - Smart Link Management</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
-<div class="container">
-    <h1>SecurePath AI Pipeline</h1>
-    <p class="subtitle">Next-Gen URL Infrastructure & Automated Cyber-Threat Mitigation Matrix</p>
-
-    <div class="form-group-container">
-        <div class="form-group">
-            <input type="text" id="urlInput" placeholder="Paste your destination link here (e.g., https://example.com)...">
-            <input type="text" id="aliasInput" placeholder="Custom Alias (Optional, e.g., my-portfolio)" style="max-width: 250px;">
-            <button id="shortenBtn">Shorten & Scan</button>
+<header class="control-strip">
+    <div class="control-strip-inner">
+        <div class="brand">
+            <span class="brand-mark">SP</span>
+            <span class="brand-name">SecurePath <span class="brand-accent">AI</span></span>
+        </div>
+        <div class="status-pill">
+            <span class="status-dot"></span>
+            <span id="statusText">System Online</span>
         </div>
     </div>
+</header>
+
+<div class="container">
+    <p class="subtitle">AI-screened link shortening with live threat analysis and click telemetry.</p>
+
+    <div class="stats-strip" id="statsStrip">
+        <div class="stat-card">
+            <span class="stat-label">Links Tracked</span>
+            <span class="stat-value" id="statTotal">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Total Clicks</span>
+            <span class="stat-value" id="statClicks">0</span>
+        </div>
+        <div class="stat-card stat-card--danger">
+            <span class="stat-label">Threats Flagged</span>
+            <span class="stat-value" id="statThreats">0</span>
+        </div>
+    </div>
+
+    <form class="form-group-container" id="shortenForm">
+        <div class="form-group">
+            <input type="url" id="urlInput" placeholder="Paste your destination link here (e.g., https://example.com)..." required>
+            <input type="text" id="aliasInput" placeholder="Custom alias (optional)">
+            <button type="submit" id="shortenBtn">
+                <span class="btn-label">Shorten &amp; Scan</span>
+            </button>
+        </div>
+    </form>
 
     <div class="dashboard-header">
         <h2>Threat Mitigation Dashboard</h2>
         <div class="action-buttons">
-            <button id="refreshBtn">Refresh Data</button>
-            <button id="clearBtn">Clear Dashboard</button>
+            <button id="refreshBtn" class="btn-secondary">Refresh</button>
+            <button id="clearBtn" class="btn-danger-outline">Clear All</button>
         </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Original Destination Link</th>
-                <th>Secure Short URL</th>
-                <th>QR Code</th>
-                <th>Clicks</th>
-                <th>Safety Status</th>
-                <th>AI Threat Analysis Summary</th>
-            </tr>
-        </thead>
-        <tbody id="analyticsTableBody">
-            </tbody>
-    </table>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Destination</th>
+                    <th>Short URL</th>
+                    <th>QR</th>
+                    <th>Clicks</th>
+                    <th>Safety</th>
+                    <th>AI Analysis</th>
+                </tr>
+            </thead>
+            <tbody id="analyticsTableBody">
+                </tbody>
+        </table>
+    </div>
 </div>
+
+<div class="toast-container" id="toastContainer"></div>
 
 <script src="app.js"></script>
 </body>
